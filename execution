@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Checklists por Pastas</title>
+  <style>
+    :root {
+      /* Modo claro — tons de areia  */
+      --bg-body: #f8f1e9;           /* areia clara */
+      --bg-container: #fdfaf5;      /* quase branco areia */
+      --bg-card: #f9f5ed;           /* cartões um pouco mais escuros */
+      --text-primary: #3c2f2f;      /* marrom escuro quente */
+      --text-secondary: #6b5e5e;    /* cinza marrom médio */
+      --border: #e0d5c8;            /* bege acinzentado */
+      --shadow: rgba(139, 115, 85, 0.12); /* sombra marrom suave */
+      --header-bg: #a68a64;         /* bege/marrom claro quente */
+      --header-text: #fdfaf5;
+      --folder-active-bg: #fdfaf5;
+      --input-bg: #fffdfa;
+      --add-btn: #8b7355;           /* marrom areia */
+      --add-btn-hover: #7a644a;
+    }
+
+    body.dark {
+      /* Modo escuro mantido (você pode ajustar se quiser) */
+      --bg-body: #121212;
+      --bg-container: #1e1e1e;
+      --bg-card: #252525;
+      --text-primary: #e0e0e0;
+      --text-secondary: #b0b0b0;
+      --border: #333;
+      --shadow: rgba(0,0,0,0.5);
+      --header-bg: #0d47a1;
+      --header-text: white;
+      --folder-active-bg: #252525;
+      --input-bg: #2a2a2a;
+      --add-btn: #3367d6;
+      --add-btn-hover: #2b55b0;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: var(--bg-body);
+      margin: 0;
+      padding: 15px;
+      color: var(--text-primary);
+      transition: background 0.4s, color 0.4s;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      position: relative;
+    }
+
+    .header {
+      background: var(--header-bg);
+      color: var(--header-text);
+      padding: 16px 20px;
+      border-radius: 12px 12px 0 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-weight: 500;
+      box-shadow: 0 2px 8px var(--shadow);
+    }
+
+    .theme-toggle {
+      background: rgba(255,255,255,0.25);
+      border: none;
+      color: var(--header-text);
+      font-size: 1.4rem;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s;
+    }
+
+    .theme-toggle:hover {
+      background: rgba(255,255,255,0.35);
+    }
+
+    .folders-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 16px 0;
+      padding: 0 4px;
+    }
+
+    .folder-tab {
+      padding: 10px 18px;
+      border-radius: 999px;
+      background: var(--bg-card);
+      color: var(--text-primary);
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.2s;
+      font-size: 0.95rem;
+      border: 2px solid transparent;
+    }
+
+    .folder-tab.active {
+      background: var(--folder-active-bg);
+      box-shadow: 0 3px 10px var(--shadow);
+      font-weight: 600;
+    }
+
+    .folder-tab .color-dot {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      margin-right: 8px;
+      border: 2px solid var(--bg-container);
+      box-shadow: 0 0 0 1.5px var(--border);
+    }
+
+    .add-folder {
+      padding: 10px 16px;
+      background: #a68a64;
+      color: white;
+      border: none;
+      border-radius: 999px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .add-folder:hover { background: #94795a; }
+
+    .current-folder {
+      background: var(--bg-container);
+      border-radius: 12px;
+      box-shadow: 0 4px 16px var(--shadow);
+      overflow: hidden;
+      min-height: 400px;
+      transition: all 0.4s;
+    }
+
+    .folder-header {
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-card);
+    }
+
+    .folder-header input[type="text"] {
+      flex: 1;
+      font-size: 1.3rem;
+      font-weight: 600;
+      border: none;
+      background: transparent;
+      outline: none;
+      color: var(--text-primary);
+    }
+
+    .folder-header input[type="color"] {
+      width: 44px;
+      height: 44px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      cursor: pointer;
+      padding: 3px;
+      background: var(--bg-container);
+    }
+
+    .add-task-area {
+      padding: 16px 20px;
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      gap: 10px;
+    }
+
+    .add-task-area input {
+      flex: 1;
+      padding: 12px 16px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-size: 1rem;
+      background: var(--input-bg);
+      color: var(--text-primary);
+    }
+
+    .add-task-area button {
+      padding: 0 24px;
+      background: var(--add-btn);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .add-task-area button:hover {
+      background: var(--add-btn-hover);
+    }
+
+    .tasks-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      padding: 20px;
+    }
+
+    @media (max-width: 720px) {
+      .tasks-grid { grid-template-columns: 1fr; }
+    }
+
+    .task-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      background: var(--bg-card);
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      transition: all 0.18s;
+    }
+
+    .task-item:hover {
+      border-color: #c4b29a;
+      box-shadow: 0 3px 10px var(--shadow);
+    }
+
+    input[type="checkbox"] {
+      width: 24px;
+      height: 24px;
+      accent-color: #a68a64; /* cor areia/marrom para o check */
+      cursor: pointer;
+    }
+
+    .task-text {
+      flex: 1;
+      font-size: 1.05rem;
+    }
+
+    .task-text.completed {
+      text-decoration: line-through;
+      color: var(--text-secondary);
+      opacity: 0.8;
+    }
+
+    .delete-btn {
+      background: #c85a54;
+      color: white;
+      border: none;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      font-size: 18px;
+      line-height: 1;
+      cursor: pointer;
+    }
+
+    .delete-btn:hover { background: #b44c47; }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-secondary);
+      font-size: 1.1rem;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    Minhas Listas e Checklists
+    <button class="theme-toggle" id="theme-toggle" title="Alternar tema">🌙</button>
+  </div>
+
+  <div class="folders-bar" id="folders-bar"></div>
+
+  <div class="current-folder" id="current-folder"></div>
+</div>
+
+<script>
+// ────────────────────────────────────────────────
+let folders = JSON.parse(localStorage.getItem('checklist_folders')) || [
+  { id: 1, name: "Compras", color: "#a68a64", tasks: [] },
+  { id: 2, name: "Trabalho", color: "#8b7355", tasks: [] },
+  { id: 3, name: "Pessoal", color: "#c4b29a", tasks: [] }
+];
+
+let currentFolderId = parseInt(localStorage.getItem('currentFolderId')) || 1;
+let isDark = localStorage.getItem('darkMode') === 'true';
+
+const body = document.body;
+const toggleBtn = document.getElementById('theme-toggle');
+
+if (isDark) {
+  body.classList.add('dark');
+  toggleBtn.textContent = '☀️';
+} else {
+  toggleBtn.textContent = '🌙';
+}
+
+toggleBtn.onclick = () => {
+  isDark = !isDark;
+  body.classList.toggle('dark', isDark);
+  toggleBtn.textContent = isDark ? '☀️' : '🌙';
+  localStorage.setItem('darkMode', isDark);
+};
+
+function saveData() {
+  localStorage.setItem('checklist_folders', JSON.stringify(folders));
+  localStorage.setItem('currentFolderId', currentFolderId);
+}
+
+function getCurrentFolder() {
+  return folders.find(f => f.id === currentFolderId) || folders[0];
+}
+
+function renderFolders() {
+  const bar = document.getElementById('folders-bar');
+  bar.innerHTML = '';
+
+  folders.forEach(folder => {
+    const tab = document.createElement('div');
+    tab.className = 'folder-tab' + (folder.id === currentFolderId ? ' active' : '');
+    tab.style.borderColor = folder.color;
+    tab.style.background = folder.id === currentFolderId 
+      ? 'var(--folder-active-bg)' 
+      : folder.color + '22';
+    tab.innerHTML = `
+      <span class="color-dot" style="background:${folder.color}"></span>
+      ${folder.name}
+    `;
+    tab.onclick = () => {
+      currentFolderId = folder.id;
+      saveData();
+      renderAll();
+    };
+    bar.appendChild(tab);
+  });
+
+  const addBtn = document.createElement('button');
+  addBtn.className = 'add-folder';
+  addBtn.textContent = '+ Nova Pasta';
+  addBtn.onclick = addNewFolder;
+  bar.appendChild(addBtn);
+}
+
+function renderCurrentFolder() {
+  const container = document.getElementById('current-folder');
+  const folder = getCurrentFolder();
+  if (!folder) {
+    container.innerHTML = '<div class="empty-state">Nenhuma pasta encontrada</div>';
+    return;
+  }
+
+  container.innerHTML = `
+    <div class="folder-header" style="background:${folder.color}15;">
+      <input type="text" value="${folder.name}" 
+             onchange="updateFolderName(this.value)">
+      <input type="color" value="${folder.color}" 
+             onchange="updateFolderColor(this.value)">
+    </div>
+
+    <div class="add-task-area">
+      <input type="text" id="new-task-input" placeholder="Nova tarefa..." autofocus>
+      <button onclick="addTask()">Adicionar</button>
+    </div>
+
+    <div class="tasks-grid" id="tasks-grid"></div>
+  `;
+
+  const grid = document.getElementById('tasks-grid');
+  if (folder.tasks.length === 0) {
+    grid.innerHTML = '<div class="empty-state">Nenhuma tarefa nesta pasta ainda...</div>';
+  } else {
+    folder.tasks.forEach((task, idx) => {
+      const item = document.createElement('div');
+      item.className = 'task-item';
+      item.innerHTML = `
+        <input type="checkbox" ${task.done ? 'checked' : ''} 
+               onchange="toggleTask(${idx})">
+        <span class="task-text ${task.done ? 'completed' : ''}">${task.text}</span>
+        <button class="delete-btn" onclick="deleteTask(${idx})">×</button>
+      `;
+      grid.appendChild(item);
+    });
+  }
+
+  document.getElementById('new-task-input').onkeypress = e => {
+    if (e.key === 'Enter') addTask();
+  };
+}
+
+function renderAll() {
+  renderFolders();
+  renderCurrentFolder();
+}
+
+// ─── Ações ───────────────────────────────────────
+function addNewFolder() {
+  const name = prompt("Nome da nova pasta:", "Nova Pasta");
+  if (!name || !name.trim()) return;
+
+  const newId = folders.length ? Math.max(...folders.map(f => f.id)) + 1 : 1;
+  folders.push({
+    id: newId,
+    name: name.trim(),
+    color: '#'+Math.floor(Math.random()*16777215).toString(16),
+    tasks: []
+  });
+  currentFolderId = newId;
+  saveData();
+  renderAll();
+}
+
+function updateFolderName(newName) {
+  const folder = getCurrentFolder();
+  if (folder) {
+    folder.name = newName.trim() || "Sem nome";
+    saveData();
+    renderFolders();
+  }
+}
+
+function updateFolderColor(newColor) {
+  const folder = getCurrentFolder();
+  if (folder) {
+    folder.color = newColor;
+    saveData();
+    renderAll();
+  }
+}
+
+function addTask() {
+  const input = document.getElementById('new-task-input');
+  const text = input.value.trim();
+  if (!text) return;
+
+  const folder = getCurrentFolder();
+  folder.tasks.push({ text, done: false });
+  saveData();
+  input.value = '';
+  renderCurrentFolder();
+}
+
+function toggleTask(index) {
+  const folder = getCurrentFolder();
+  folder.tasks[index].done = !folder.tasks[index].done;
+  saveData();
+  renderCurrentFolder();
+}
+
+function deleteTask(index) {
+  if (!confirm("Excluir esta tarefa?")) return;
+  const folder = getCurrentFolder();
+  folder.tasks.splice(index, 1);
+  saveData();
+  renderCurrentFolder();
+}
+
+// Inicializa
+renderAll();
+</script>
+
+</body>
+</html>
